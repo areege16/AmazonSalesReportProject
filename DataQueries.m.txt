@@ -1,0 +1,49 @@
+***Table Amazon_Sales_Dataset***
+let
+    Source = Csv.Document(File.Contents("D:\DEPI\Technical\Graduation\amazon_sales_dataset (1).csv"),[Delimiter=",", Columns=22, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Day", Int64.Type}, {"Month", Int64.Type}, {"Year", Int64.Type}, {"Store", Int64.Type}, {"Dept", Int64.Type}, {"Weekly_Sales", type number}, {"Type", type text}, {"Size", Int64.Type}, {"Temperature", type number}, {"Fuel_Price", type number}, {"CPI", type number}, {"Unemployment", type number}, {"IsHoliday", Int64.Type}, {"Year_1", Int64.Type}, {"Month_2", Int64.Type}, {"Week", Int64.Type}, {"max", type number}, {"min", type number}, {"mean", type number}, {"median", type number}, {"std", type number}, {"Total_MarkDown", Int64.Type}}),
+    #"Changed Type1" = Table.TransformColumnTypes(#"Changed Type",{{"Store", type text}, {"Dept", type text}}),
+    #"Added Conditional Column" = Table.AddColumn(#"Changed Type1", "Holiday", each if [IsHoliday] = 0 then "Non Holiday" else "Holiday"),
+    #"Changed Type2" = Table.TransformColumnTypes(#"Added Conditional Column",{{"Holiday", type text}}),
+    #"Merged Columns" = Table.CombineColumns(Table.TransformColumnTypes(#"Changed Type2", {{"Day", type text}, {"Month", type text}, {"Year", type text}}, "en-US"),{"Day", "Month", "Year"},Combiner.CombineTextByDelimiter("/", QuoteStyle.None),"Date"),
+    #"Changed Type with Locale" = Table.TransformColumnTypes(#"Merged Columns", {{"Date", type date}}, "en-GB"),
+    #"Changed Type3" = Table.TransformColumnTypes(#"Changed Type with Locale",{{"Size", type text}, {"max", type text}, {"min", type text}, {"mean", type text}, {"median", type text}}),
+    #"Changed Type4" = Table.TransformColumnTypes(#"Changed Type3",{{"std", type text}})
+in
+    #"Changed Type4"
+***Table Date***
+let
+    Source = Csv.Document(File.Contents("D:\DEPI\Technical\Graduation\amazon_sales_dataset (1).csv"),[Delimiter=",", Columns=22, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"Day", Int64.Type}, {"Month", Int64.Type}, {"Year", Int64.Type}, {"Store", Int64.Type}, {"Dept", Int64.Type}, {"Weekly_Sales", type number}, {"Type", type text}, {"Size", Int64.Type}, {"Temperature", type number}, {"Fuel_Price", type number}, {"CPI", type number}, {"Unemployment", type number}, {"IsHoliday", Int64.Type}, {"Year_1", Int64.Type}, {"Month_2", Int64.Type}, {"Week", Int64.Type}, {"max", type number}, {"min", type number}, {"mean", type number}, {"median", type number}, {"std", type number}, {"Total_MarkDown", Int64.Type}}),
+    #"Replaced Value" = Table.ReplaceValue(#"Changed Type","0","Non Holiday",Replacer.ReplaceText,{"IsHoliday"}),
+    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","1","Holiday",Replacer.ReplaceText,{"IsHoliday"}),
+    #"Removed Other Columns" = Table.SelectColumns(#"Replaced Value1",{"Day", "Month", "Year"}),
+    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+    #"Merged Columns" = Table.CombineColumns(Table.TransformColumnTypes(#"Removed Duplicates", {{"Day", type text}, {"Month", type text}, {"Year", type text}}, "en-US"),{"Day", "Month", "Year"},Combiner.CombineTextByDelimiter("/", QuoteStyle.None),"Date"),
+    #"Changed Type with Locale" = Table.TransformColumnTypes(#"Merged Columns", {{"Date", type date}}, "en-GB"),
+    #"Inserted Year" = Table.AddColumn(#"Changed Type with Locale", "Year", each Date.Year([Date]), Int64.Type),
+    #"Inserted Month" = Table.AddColumn(#"Inserted Year", "Month", each Date.Month([Date]), Int64.Type),
+    #"Inserted Quarter" = Table.AddColumn(#"Inserted Month", "Quarter", each Date.QuarterOfYear([Date]), Int64.Type),
+    #"Inserted Day" = Table.AddColumn(#"Inserted Quarter", "Day", each Date.Day([Date]), Int64.Type),
+    #"Inserted Month Name" = Table.AddColumn(#"Inserted Day", "Month Name", each Date.MonthName([Date]), type text),
+    #"Inserted Day Name" = Table.AddColumn(#"Inserted Month Name", "Day Name", each Date.DayOfWeekName([Date]), type text),
+    #"Added Prefix" = Table.TransformColumns(#"Inserted Day Name", {{"Quarter", each "Qrt " & Text.From(_, "en-US"), type text}}),
+    #"Added Custom" = Table.AddColumn(#"Added Prefix", "Custom", each Table.AddColumn(#"Added Prefix", "Holiday", each if [Date] >= #date(2019, 2, 10) and [Date] <= #date(2019, 2, 16) then "Super Bowl 2019" else
+if [Date] >= #date(2020, 2, 9) and [Date] <= #date(2020, 2, 15) then "Super Bowl 2020" else
+if [Date] >= #date(2021, 2, 7) and [Date] <= #date(2021, 2, 13) then "Super Bowl 2021" else
+if [Date] >= #date(2019, 9, 8) and [Date] <= #date(2019, 9, 14) then "Labor Day 2019" else
+if [Date] >= #date(2020, 9, 6) and [Date] <= #date(2020, 9, 12) then "Labor Day 2020" else
+if [Date] >= #date(2021, 9, 5) and [Date] <= #date(2021, 9, 11) then "Labor Day 2021" else
+if [Date] >= #date(2019, 11, 24) and [Date] <= #date(2019, 11, 30) then "Thanksgiving 2019" else
+if [Date] >= #date(2020, 11, 22) and [Date] <= #date(2020, 11, 28) then "Thanksgiving 2020" else
+if [Date] >= #date(2021, 11, 21) and [Date] <= #date(2021, 11, 27) then "Thanksgiving 2021" else
+if [Date] >= #date(2019, 12, 29) and [Date] <= #date(2020, 1, 4) then "Christmas 2019" else
+if [Date] >= #date(2020, 12, 27) and [Date] <= #date(2021, 1, 2) then "Christmas 2020" else
+if [Date] >= #date(2021, 12, 26) and [Date] <= #date(2022, 1, 1) then "Christmas 2021" else
+"Non-Holiday")),
+    Custom = #"Added Custom"{21}[Custom],
+    #"Changed Type1" = Table.TransformColumnTypes(Custom,{{"Holiday", type text}})
+in
+    #"Changed Type1"

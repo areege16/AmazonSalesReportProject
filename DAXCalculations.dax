@@ -1,0 +1,77 @@
+-All Stores = DISTINCTCOUNT(amazon_sales_dataset[Store])
+
+-AVG CPI = AVERAGE(amazon_sales_dataset[CPI])
+
+-Avg Sales Store = AVERAGEX(VALUES('amazon_sales_dataset'[Store]), [Total Sales])
+
+-Avg_Weekly_Sales = AVERAGE('amazon_sales_dataset'[Weekly_Sales])
+
+-Department With Highest Sales = 
+CALCULATE(
+    VALUES('amazon_sales_dataset'[Dept]),
+TOPN(
+    1, 
+    SUMMARIZE(
+        'amazon_sales_dataset', 
+        'amazon_sales_dataset'[Dept], 
+        "TotalSales", SUM('amazon_sales_dataset'[Weekly_Sales])
+    ),
+    [TotalSales], 
+    DESC
+)
+
+)
+
+-Departments = DISTINCTCOUNT(amazon_sales_dataset[Dept]) 
+
+-Holiday Sales = CALCULATE(SUM('amazon_sales_dataset'[Weekly_Sales]), 'amazon_sales_dataset'[IsHoliday] = 1)
+
+-Markdown to sales = 
+DIVIDE(
+    ( [Sales_With_Markdown] ) , 
+    [Total Sales]
+) * 100
+
+-Max Sales = MAX('amazon_sales_dataset'[Weekly_Sales])
+
+-Min Sales = CALCULATE(MIN('amazon_sales_dataset'[Weekly_Sales])
+,   amazon_sales_dataset[Weekly_Sales] > 0 )
+
+-Promo Sales = CALCULATE(SUM('amazon_sales_dataset'[Weekly_Sales]), 'amazon_sales_dataset'[Total_MarkDown] <> BLANK())
+
+-Sales_With_Markdown = 
+CALCULATE(
+    SUM('amazon_sales_dataset'[Weekly_Sales]), 
+    'amazon_sales_dataset'[Total_MarkDown] > 0
+)
+
+-Store With Highest Sales = 
+CALCULATE(
+    VALUES('amazon_sales_dataset'[Store]),
+    TOPN(
+        1,
+        SUMMARIZE(
+            'amazon_sales_dataset',
+            'amazon_sales_dataset'[Store],
+            "TotalSales", [Total Sales]
+        ),
+        [TotalSales], 
+        DESC
+    )
+)
+
+-Stores Achieve Max Sales = 
+CALCULATE(
+    DISTINCTCOUNT(amazon_sales_dataset[Dept]), 
+    amazon_sales_dataset[Weekly_Sales] > amazon_sales_dataset[mean] )
+
+-Total Fuel Price = SUM('amazon_sales_dataset'[Fuel_Price])
+
+-Total Sales = SUM(amazon_sales_dataset[Weekly_Sales])
+
+-YoY Sales Growth = 
+//هنا نقوم بتعريف متغير ليحتوي على مجموع المبيعات الأسبوعية للسنة السابقة
+VAR PreviousYearSales = CALCULATE(SUM('amazon_sales_dataset'[Weekly_Sales]), SAMEPERIODLASTYEAR('amazon_sales_dataset'[Date]))
+RETURN
+DIVIDE(SUM('amazon_sales_dataset'[Weekly_Sales]) - PreviousYearSales, PreviousYearSales, 0)
+//يحدد نفس الفترة الزمنية من السنة السابقة. SAMEPERIODLASTYEAR 
